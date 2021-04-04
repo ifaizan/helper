@@ -264,7 +264,7 @@ EOF
         for ARG in "${ARGS[@]:1}"; do
             PKG_CHECK=$(grep "$ARG" "$FILE")
             if [[ ! -z $PKG_CHECK ]]; then
-                _warning "Package environment is already there. Skipping...."
+                _warning "Package $ARG is already there. Skipping...."
             else
                 _note "Creating environment for $ARG package"
                 ENVR="alias $ARG='/home/master/bin/npm/lib/node_modules/bin/$ARG'"
