@@ -181,7 +181,7 @@ EOF
                 else 
                 _note "Making changes on $ARG"
                 sed -i "1s/^/include \/etc\/nginx\/cf_ips;\n/g" "/etc/nginx/sites-available/$ARG"
-                LINE=$(expr $(grep -n -o -m 1 location /etc/nginx/sites-available/caxmymmvje | head -1 | awk -F ':' '{print $1}') - 1)
+                LINE=$(expr $(grep -n -o -m 1 location /etc/nginx/sites-available/$ARG | head -1 | awk -F ':' '{print $1}') - 1)
                 echo "$block" | sed -i "$LINE r /dev/stdin" "/etc/nginx/sites-available/$ARG"
                 fi
         done
