@@ -234,52 +234,56 @@ node_install() {
 
 npm_package() {
 
-USER=$(ls -l /home/ | grep master | awk '{print $3}') #Changing to master user
-FILE=/home/master/.bash_aliases
+    if [[ -z "${ARGS[@]:1}" ]]; then
+        _error "Missing package name(s).. See --help or -h for Usage"
+        exit
+    else
+        USER=$(ls -l /home/ | grep master | awk '{print $3}') #Changing to master user
+        FILE=/home/master/.bash_aliases
 MASTER=$(cat <<EOF
 export NVM_DIR="\$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "\$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "\$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 EOF
 )
-
-    if [ -f "$FILE" ]; then
-        ENV_CHECK=$(grep "NVM_DIR=" "$FILE")
-        if [[ ! -z $ENV_CHECK ]]; then
-            _warning "Environment is already there for master user. Skipping...."
-        else 
-            _note "Creating master user environment"
+        if [ -f "$FILE" ]; then
+            ENV_CHECK=$(grep "NVM_DIR=" "$FILE")
+            if [[ ! -z $ENV_CHECK ]]; then
+                _warning "Environment is already there for master user. Skipping...."
+            else 
+                _note "Creating master user environment"
+                (echo "$MASTER" && cat "$FILE") > /tmp/bash_aliases && mv /tmp/bash_aliases $FILE
+            fi
+        else
+            _warning "$FILE doesn't exist... Creating one"
+            touch $FILE
+            chown $USER:www-data $FILE
             (echo "$MASTER" && cat "$FILE") > /tmp/bash_aliases && mv /tmp/bash_aliases $FILE
         fi
-    else
-        _warning "$FILE doesn't exist... Creating one"
-        touch $FILE
-        chown $USER:www-data $FILE
-        (echo "$MASTER" && cat "$FILE") > /tmp/bash_aliases && mv /tmp/bash_aliases $FILE
-    fi
 
-    for ARG in "${ARGS[@]:1}"; do
-        PKG_CHECK=$(grep "$ARG" "$FILE")
-        if [[ ! -z $PKG_CHECK ]]; then
-            _warning "Package environment is already there. Skipping...."
-        else
-            _note "Creating environment for $ARG package"
-            ENVR="alias $ARG='/home/master/bin/npm/lib/node_modules/bin/$ARG'"
-            echo "$ENVR" >> $FILE
-
-            su - $USER -c "npm config set prefix \"/home/master/bin/npm/lib/node_modules\"" #>> /dev/null 2<&1
-
-            _note "Installing $ARG"
-            su - $USER -c "npm install -g $ARG" >> /tmp/npm-script.log 2<&1
-
-            if [ "$?" == 0 ]; then
-                    _success "$ARG installed successfully"
+        for ARG in "${ARGS[@]:1}"; do
+            PKG_CHECK=$(grep "$ARG" "$FILE")
+            if [[ ! -z $PKG_CHECK ]]; then
+                _warning "Package environment is already there. Skipping...."
             else
-                    _error "Unexpected error, see log file at /tmp/npm-script.log"
-                    exit
-            fi        
-        fi
-    done
+                _note "Creating environment for $ARG package"
+                ENVR="alias $ARG='/home/master/bin/npm/lib/node_modules/bin/$ARG'"
+                echo "$ENVR" >> $FILE
+
+                su - $USER -c "npm config set prefix \"/home/master/bin/npm/lib/node_modules\"" #>> /dev/null 2<&1
+
+                _note "Installing $ARG"
+                su - $USER -c "npm install -g $ARG" >> /tmp/npm-script.log 2<&1
+
+                if [ "$?" == 0 ]; then
+                        _success "$ARG installed successfully"
+                else
+                        _error "Unexpected error, see log file at /tmp/npm-script.log"
+                        exit
+                fi        
+            fi
+        done
+    fi
 }
 
 if [[ "${ARGS[0]}" == "--webp" ]]; then
