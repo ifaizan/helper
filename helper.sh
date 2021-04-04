@@ -26,13 +26,17 @@ Usage() {
 ./helper.sh [OPTIONS]
 
     Options:
-        --webp                                  Configure the server to serve webp images
-        --allow-cloudflare                      Configure nginx to allow only traffic from Cloudflare
-        --version                               Display version of this script
-        -h , --help                             Display this help and exit
+        --webp                                  	Configure the server to serve webp images
+        --allow-cloudflare                      	Configure nginx to allow only traffic from Cloudflare
+        --install-node                          	Install the specified version of node
+	--npm-package					Install any npm package (yarn, pm2 etc) and configure master user
+        --version                               	Display version of this script
+        -h , --help                             	Display this help and exit
     Examples:
-		./helper.sh --webp [app1] [app2]		[Install and configure webp on multiple applications]						
-
+	./helper.sh --webp [app1] [app2]		[Install and configure webp on multiple applications]
+        ./helper.sh --allow-cloudflare [app1]		[Allow traffic from Cloudflare only]        
+        ./helper.sh --install-node 14.16.0		[Install Specified node version]						
+	./helper.sh --npm-package [package-name]	[Install the specified npm package and configure master user]
 EOF
 
 powered_by
@@ -201,10 +205,91 @@ EOF
     fi
 }
 
+node_install() {
+    if [ -z "${ARGS[@]:1}" ]; then
+        _error "Missing argument.. See --help or -h for Usage"
+        exit
+    else
+        NODE_VER="${ARGS[@]:1}"
+        STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://nodejs.org/dist/v$NODE_VER/node-v$NODE_VER-linux-x64.tar.gz")
+
+        if [ "$STATUS_CODE" == "200" ]; then
+            _note "Installing Node v$NODE_VER"
+            cd /var/cw/systeam
+            curl -sL "https://nodejs.org/dist/v$NODE_VER/node-v$NODE_VER-linux-x64.tar.gz" | tar -xzf -
+            mv /usr/bin/node /tmp/
+            cp /var/cw/systeam/node-v$NODE_VER-linux-x64/bin/node /usr/bin/
+            _success "Node v$NODE_VER installed"
+
+            _note "Updating npm"
+            rm /usr/bin/npm
+            ln -s /var/cw/systeam/node-v$NODE_VER-linux-x64/lib/node_modules/npm/bin/npm-cli.js /usr/bin/npm
+            _success "npm updated successfully"
+        else
+            _error "Repository doesn't exist.. Exiting"
+            exit
+        fi
+    fi
+}
+
+npm_package() {
+
+USER=$(ls -l /home/ | grep master | awk '{print $3}') #Changing to master user
+FILE=/home/master/.bash_aliases
+MASTER=$(cat <<EOF
+export NVM_DIR="\$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "\$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "\$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+EOF
+)
+
+    if [ -f "$FILE" ]; then
+        ENV_CHECK=$(grep "NVM_DIR=" "$FILE")
+        if [[ ! -z $ENV_CHECK ]]; then
+            _warning "Environment is already there for master user. Skipping...."
+        else 
+            _note "Creating master user environment"
+            (echo "$MASTER" && cat "$FILE") > /tmp/bash_aliases && mv /tmp/bash_aliases $FILE
+        fi
+    else
+        _warning "$FILE doesn't exist... Creating one"
+        touch $FILE
+        chown $USER:www-data $FILE
+        (echo "$MASTER" && cat "$FILE") > /tmp/bash_aliases && mv /tmp/bash_aliases $FILE
+    fi
+
+    for ARG in "${ARGS[@]:1}"; do
+        PKG_CHECK=$(grep "$ARG" "$FILE")
+        if [[ ! -z $PKG_CHECK ]]; then
+            _warning "Package environment is already there. Skipping...."
+        else
+            _note "Creating environment for $ARG package"
+            ENVR="alias $ARG='/home/master/bin/npm/lib/node_modules/bin/$ARG'"
+            echo "$ENVR" >> $FILE
+
+            su - $USER -c "npm config set prefix \"/home/master/bin/npm/lib/node_modules\"" #>> /dev/null 2<&1
+
+            _note "Installing $ARG"
+            su - $USER -c "npm install -g $ARG" >> /tmp/npm-script.log 2<&1
+
+            if [ "$?" == 0 ]; then
+                    _success "$ARG installed successfully"
+            else
+                    _error "Unexpected error, see log file at /tmp/npm-script.log"
+                    exit
+            fi        
+        fi
+    done
+}
+
 if [[ "${ARGS[0]}" == "--webp" ]]; then
 	webp_configure
 elif [[ "${ARGS[0]}" == "--allow-cloudflare" ]]; then
 	allow_cf
+elif [[ "${ARGS[0]}" == "--install-node" ]]; then
+	node_install
+elif [[ "${ARGS[0]}" == "--npm-package" ]]; then
+	npm_package
 elif [[ "${ARGS[0]}" == "--version" || "${ARGS[0]}" == "-v" ]]; then
 	echo "HelperScript v1.0.1"
 else
