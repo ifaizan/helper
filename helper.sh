@@ -100,7 +100,7 @@ ARGS=( "$@" )
 
 webp_configure() {
 
-    if [ -z "${ARGS[@]:1}" ]; then
+    if [[ -z "${ARGS[@]:1}" ]]; then
         _error "Missing argument.. See --help or -h for Usage"
         exit
     else
@@ -131,7 +131,7 @@ webp_configure() {
 
 allow_cf() {
 
-    if [ -z "${ARGS[@]:1}" ]; then
+    if [[ -z "${ARGS[@]:1}" ]]; then
         _error "Missing argument.. See --help or -h for Usage"
         exit
     else
@@ -206,7 +206,7 @@ EOF
 }
 
 node_install() {
-    if [ -z "${ARGS[@]:1}" ]; then
+    if [[ -z "${ARGS[@]:1}" ]]; then
         _error "Missing argument.. See --help or -h for Usage"
         exit
     else
