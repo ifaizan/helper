@@ -121,7 +121,7 @@ webp_configure() {
   	    find ${webroot} -maxdepth -1 -type f -name ".htaccess" | xargs sed -i '1s#^#<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteCond %{HTTP_ACCEPT} image/webp\nRewriteCond %{REQUEST_FILENAME} (.*)\.(jpe?g|png)$\nRewriteCond %{REQUEST_FILENAME}.webp -f\nRewriteRule (.+)\.(jpe?g|png)$ %{REQUEST_URI}.webp [T=image/webp,E=accept:1,L]\n</IfModule>\n<IfModule mod_headers.c>\nHeader append Vary Accept env=REDIRECT_accept\n</IfModule>\n#'
 	    
 	    _note "Setting up varnish exclusions"
-  	    sed -i '1s#^#if (req.url ~ "/(.+\.(jpeg|jpg|png))?$") { return (pipe); } \#For_Webp\n#' /home/master/${ARG}/conf/custom-recv.vcl
+  	    sed -i '1s#^#if (req.url ~ "/(.+\.(jpeg|jpg|png))?$") { return (pipe); } \#For_Webp\n#' /home/master/applications/${ARG}/conf/custom-recv.vcl
 	    
 	    _note "Adding webp to Nginx vhost"
 	    sed -i 's#tgz|#tgz|webp|#' /etc/nginx/sites-available/${ARG}
