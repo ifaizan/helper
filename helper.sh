@@ -117,8 +117,8 @@ webp_configure() {
             _note "Removing extensions from $ARG"
             sed -r -i 's/\b(jpg\||jpeg\||png\|)\b//g' /etc/nginx/sites-available/$ARG
 	    
-	    _note "Adding .htaccess rules"
-  	    find ${webroot} -maxdepth -1 -type f -name ".htaccess" | xargs sed -i '1s#^#<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteCond %{HTTP_ACCEPT} image/webp\nRewriteCond %{REQUEST_FILENAME} (.*)\.(jpe?g|png)$\nRewriteCond %{REQUEST_FILENAME}.webp -f\nRewriteRule (.+)\.(jpe?g|png)$ %{REQUEST_URI}.webp [T=image/webp,E=accept:1,L]\n</IfModule>\n<IfModule mod_headers.c>\nHeader append Vary Accept env=REDIRECT_accept\n</IfModule>\n#'
+#	    _note "Adding .htaccess rules"
+#  	    find ${webroot} -maxdepth -1 -type f -name ".htaccess" | xargs sed -i '1s#^#<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteCond %{HTTP_ACCEPT} image/webp\nRewriteCond %{REQUEST_FILENAME} (.*)\.(jpe?g|png)$\nRewriteCond %{REQUEST_FILENAME}.webp -f\nRewriteRule (.+)\.(jpe?g|png)$ %{REQUEST_URI}.webp [T=image/webp,E=accept:1,L]\n</IfModule>\n<IfModule mod_headers.c>\nHeader append Vary Accept env=REDIRECT_accept\n</IfModule>\n#'
 	    
 	    _note "Setting up varnish exclusions"
   	    sed -i '1s#^#if (req.url ~ "/(.+\.(jpeg|jpg|png))?$") { return (pipe); } \#For_Webp\n#' /home/master/applications/${ARG}/conf/custom-recv.vcl
