@@ -3,12 +3,12 @@
     ./helper.sh [OPTIONS]
 
     Options:
-        --webp                                  Configure the server to serve webp images
-        --allow-cloudflare                      Configure nginx to allow only traffic from Cloudflare
-        --install-node                         	Install the specified version of node
+        --webp				Configure the server to serve webp images
+        --allow-cloudflare			Configure nginx to allow only traffic from Cloudflare
+        --install-node			Install the specified version of node
 	--npm-package				Install any npm package (yarn, pm2 etc) and configure master user    
-        --version                               Display version of this script
-        -h , --help                             Display this help and exit
+        --version				Display version of this script
+        -h , --help				Display this help and exit
     Examples:
     
  
