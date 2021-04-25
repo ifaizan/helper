@@ -237,6 +237,12 @@ node_install() {
             rm /usr/bin/npm
             ln -s /var/cw/systeam/node-v$NODE_VER-linux-x64/lib/node_modules/npm/bin/npm-cli.js /usr/bin/npm
             _success "npm updated successfully"
+
+            _note "Updating npx"
+            rm /usr/bin/npx
+            ln -s /var/cw/systeam/node-v$NODE_VER-linux-x64/lib/node_modules/npm/bin/npx-cli.js /usr/bin/npx
+            _success "npx updated successfully"
+
         else
             _error "Repository doesn't exist.. Exiting"
             exit
