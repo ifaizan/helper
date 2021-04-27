@@ -271,6 +271,7 @@ EOF
             else 
                 _note "Creating master user environment"
                 (echo "$MASTER" && cat "$FILE") > /tmp/bash_aliases && mv /tmp/bash_aliases $FILE
+                chown $USER:www-data $FILE
             fi
         else
             _warning "$FILE doesn't exist... Creating one"
