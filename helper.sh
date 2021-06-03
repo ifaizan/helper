@@ -276,8 +276,8 @@ EOF
         else
             _warning "$FILE doesn't exist... Creating one"
             touch $FILE
-            chown $USER:www-data $FILE
             (echo "$MASTER" && cat "$FILE") > /tmp/bash_aliases && mv /tmp/bash_aliases $FILE
+            chown $USER:www-data $FILE
         fi
 
         for ARG in "${ARGS[@]:1}"; do
